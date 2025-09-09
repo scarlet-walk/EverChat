@@ -74,7 +74,7 @@ def create_post():
     file = request.files.get('image')
     filename = None
     
-    if file and allowed_file(file.filename):
+    if file and file.filename and allowed_file(file.filename):
         # Generate unique filename
         file_extension = file.filename.rsplit('.', 1)[1].lower()
         filename = f"{uuid.uuid4().hex}.{file_extension}"
