@@ -5,6 +5,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app import app, db
 from models import User, Post, Like, Comment, Message
+import openai
+
+# Initialize OpenAI client
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -196,3 +200,102 @@ def assistant():
 @login_required
 def settings():
     return render_template('settings.html')
+
+@app.route('/api/gpt-chat', methods=['POST'])
+@login_required
+def gpt_chat():
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        mode = data.get('mode', 'general')
+        
+        # Define system prompts for different modes
+        system_prompts = {
+            'general': 'أنت مساعد ذكي مفيد وودود. تجيب باللغة العربية وتقدم إجابات واضحة ومفيدة.',
+            'travel': 'أنت مساعد سفر متخصص. تساعد في التخطيط للرحلات والسياحة والطرق والفنادق. تجيب باللغة العربية.',
+            'emergency': 'أنت مساعد طوارئ. تقدم مساعدة فورية وإرشادات واضحة للمواقف الطارئة. تجيب باللغة العربية وتؤكد على السلامة أولاً.'
+        }
+        
+        system_prompt = system_prompts.get(mode, system_prompts['general'])
+        
+        # Create OpenAI chat completion
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": message}
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        ai_response = response.choices[0].message.content
+        
+        return jsonify({
+            'success': True,
+            'response': ai_response
+        })
+        
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        # Fallback responses when API is unavailable
+        fallback_responses = {
+            'general': 'عذراً، المساعد الذكي غير متاح حالياً. يرجى المحاولة لاحقاً.',
+            'travel': 'مساعد السفر غير متاح حالياً. يمكنك استخدام الوضع العام أو المحاولة لاحقاً.',
+            'emergency': 'في حالات الطوارئ، اتصل مباشرة بالرقم 999 للحصول على المساعدة الفورية.'
+        }
+        
+        return jsonify({
+            'success': False,
+            'response': fallback_responses.get(mode, fallback_responses['general'])
+        })
+
+@app.route('/api/process-gpt-command', methods=['POST'])
+@login_required
+def process_gpt_command():
+    """Process @GPT commands in chat messages"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        
+        # Check if message contains @GPT command
+        if '@GPT' not in message.upper():
+            return jsonify({'success': False, 'error': 'No @GPT command found'})
+        
+        # Extract the question after @GPT
+        gpt_parts = message.upper().split('@GPT', 1)
+        if len(gpt_parts) > 1:
+            question = gpt_parts[1].strip()
+        else:
+            question = message
+        
+        # Use OpenAI to generate response
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "أنت مساعد ذكي في تطبيق المحادثات. تجيب باختصار وبوضوح باللغة العربية."},
+                {"role": "user", "content": question}
+            ],
+            max_tokens=300,
+            temperature=0.7
+        )
+        
+        ai_response = response.choices[0].message.content
+        
+        return jsonify({
+            'success': True,
+            'response': f"🤖 مساعد GPT: {ai_response}"
+        })
+        
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        return jsonify({
+            'success': False,
+            'response': "🤖 مساعد GPT: عذراً، لا أستطيع الإجابة حالياً. يرجى المحاولة لاحقاً."
+        })

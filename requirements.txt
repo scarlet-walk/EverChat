@@ -17,3 +17,4 @@ gunicorn
 openai
 psycopg2-binary
 werkzeug
+openai

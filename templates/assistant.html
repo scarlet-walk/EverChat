@@ -306,15 +306,36 @@ function sendMessage() {
     document.getElementById('chat-messages').appendChild(typingDiv);
     document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
     
-    // Simulate AI response
-    setTimeout(() => {
+    // Send to real OpenAI API
+    fetch('/api/gpt-chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: message,
+            mode: currentMode
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
         document.getElementById('typing-indicator').remove();
         
+        if (data.success) {
+            addMessage(data.response);
+        } else {
+            addMessage(data.response || 'عذراً، حدث خطأ. يرجى المحاولة لاحقاً.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('typing-indicator').remove();
+        
+        // Fallback to local responses if API fails
         const responses = getResponsesForMode(currentMode, message);
         const response = responses[Math.floor(Math.random() * responses.length)];
-        
         addMessage(response);
-    }, 1500);
+    });
 }
 
 function getResponsesForMode(mode, userMessage) {
