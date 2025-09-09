@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Users List -->
+        <div class="col-lg-4 col-md-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>Messages
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for user in users %}
+                        <a href="#" class="list-group-item list-group-item-action user-item" data-user-id="{{ user.id }}">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ user.username }}</h6>
+                                    <small class="text-muted">Click to chat</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-lg-8 col-md-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom" id="chat-header" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-circle fa-2x text-secondary me-3"></i>
+                        <h5 class="mb-0" id="chat-username"></h5>
+                    </div>
+                </div>
+                
+                <div class="card-body d-flex flex-column" style="height: 500px;">
+                    <!-- Default state -->
+                    <div id="default-chat" class="d-flex align-items-center justify-content-center h-100">
+                        <div class="text-center">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">Select a conversation</h4>
+                            <p class="text-muted">Choose someone to start chatting with</p>
+                        </div>
+                    </div>
+
+                    <!-- Messages area -->
+                    <div id="messages-area" style="display: none;" class="d-flex flex-column h-100">
+                        <div id="messages-container" class="flex-grow-1 overflow-auto mb-3">
+                            <!-- Messages will be loaded here -->
+                        </div>
+
+                        <!-- Message input -->
+                        <form id="message-form" class="d-flex">
+                            <input type="hidden" id="recipient-id">
+                            <input type="text" id="message-input" class="form-control me-2" placeholder="Type a message..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentChatUser = null;
+
+// Handle user selection
+document.querySelectorAll('.user-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const userId = this.getAttribute('data-user-id');
+        const username = this.querySelector('h6').textContent;
+        
+        // Update active user
+        document.querySelectorAll('.user-item').forEach(u => u.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show chat area
+        document.getElementById('default-chat').style.display = 'none';
+        document.getElementById('messages-area').style.display = 'flex';
+        document.getElementById('chat-header').style.display = 'block';
+        document.getElementById('chat-username').textContent = username;
+        document.getElementById('recipient-id').value = userId;
+        
+        currentChatUser = userId;
+        loadMessages(userId);
+    });
+});
+
+// Load messages for a user
+function loadMessages(userId) {
+    fetch(`/api/messages/${userId}`)
+        .then(response => response.json())
+        .then(messages => {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+            
+            messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `d-flex mb-2 ${message.is_own ? 'justify-content-end' : 'justify-content-start'}`;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble ${message.is_own ? 'bg-primary text-white' : 'bg-light'} p-2 rounded">
+                        <div>${message.content}</div>
+                        <small class="d-block mt-1 ${message.is_own ? 'text-light' : 'text-muted'}">${new Date(message.created_at).toLocaleTimeString()}</small>
+                    </div>
+                `;
+                
+                container.appendChild(messageDiv);
+            });
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        })
+        .catch(error => console.error('Error loading messages:', error));
+}
+
+// Handle message sending
+document.getElementById('message-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const messageInput = document.getElementById('message-input');
+    const recipientId = document.getElementById('recipient-id').value;
+    const content = messageInput.value.trim();
+    
+    if (!content || !recipientId) return;
+    
+    // Send message via form submission
+    const formData = new FormData();
+    formData.append('recipient_id', recipientId);
+    formData.append('content', content);
+    
+    fetch('/send_message', {
+        method: 'POST',
+        body: formData
+    })
+    .then(() => {
+        messageInput.value = '';
+        loadMessages(currentChatUser);
+    })
+    .catch(error => console.error('Error sending message:', error));
+});
+</script>
+{% endblock %}

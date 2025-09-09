@@ -1,3 +1,19 @@
 pip install openai
 flask
 openai
+email_validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
+flask-login
+sqlalchemy
+werkzeug
+email-validator
+flask
+flask-login
+flask-sqlalchemy
+gunicorn
+openai
+psycopg2-binary
+werkzeug
