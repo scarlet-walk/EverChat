@@ -85,14 +85,34 @@ function initializeImagePreview() {
                         input.parentNode.appendChild(preview);
                     }
                     
-                    preview.innerHTML = `
-                        <div class="position-relative d-inline-block">
-                            <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
-                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="removeImagePreview()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
+                    // Clear previous content
+                    preview.innerHTML = '';
+                    
+                    // Create container div
+                    const container = document.createElement('div');
+                    container.className = 'position-relative d-inline-block';
+                    
+                    // Create image element
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-thumbnail';
+                    img.style.cssText = 'max-width: 200px; max-height: 200px;';
+                    
+                    // Create close button
+                    const closeButton = document.createElement('button');
+                    closeButton.type = 'button';
+                    closeButton.className = 'btn btn-sm btn-danger position-absolute top-0 end-0';
+                    closeButton.onclick = removeImagePreview;
+                    
+                    // Create icon for close button
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-times';
+                    closeButton.appendChild(icon);
+                    
+                    // Assemble the elements
+                    container.appendChild(img);
+                    container.appendChild(closeButton);
+                    preview.appendChild(container);
                 };
                 reader.readAsDataURL(file);
             }
@@ -130,10 +150,15 @@ function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    // Set the message safely using textContent
+    notification.textContent = message;
+    
+    // Create and append close button
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    notification.appendChild(closeButton);
     
     // Add to page
     document.body.appendChild(notification);
