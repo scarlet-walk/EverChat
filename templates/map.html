@@ -316,12 +316,37 @@ function confirmSOS() {
     // Close modal first
     bootstrap.Modal.getInstance(document.getElementById('sosModal')).hide();
     
-    showNotification('تم إرسال إشارة SOS للأجهزة القريبة', 'warning');
-    
-    // Simulate emergency broadcast
-    setTimeout(() => {
-        showNotification('تم التواصل مع 3 أجهزة قريبة', 'info');
-    }, 2000);
+    if (userLocation) {
+        // Send real SOS alert
+        fetch('/api/send-sos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                latitude: userLocation.lat,
+                longitude: userLocation.lng,
+                message: 'طلب مساعدة طارئة من تطبيق EverChat'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('تم إرسال إشارة SOS بنجاح', 'warning');
+                setTimeout(() => {
+                    showNotification('تم التواصل مع الخدمات المختصة', 'info');
+                }, 2000);
+            } else {
+                showNotification('فشل في إرسال إشارة SOS', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('SOS Error:', error);
+            showNotification('فشل في إرسال إشارة SOS', 'error');
+        });
+    } else {
+        showNotification('يجب تحديد موقعك أولاً لإرسال SOS', 'error');
+    }
 }
 
 function showNotification(message, type = 'info') {
