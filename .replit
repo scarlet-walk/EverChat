@@ -1,0 +1,38 @@
+run = "python3 main.py"
+modules = ["python-3.11"]
+
+[[ports]]
+localPort = 8001
+externalPort = 3000
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[[ports]]
+localPort = 9000
+externalPort = 9000
+
+[[ports]]
+localPort = 38365
+externalPort = 3002
+
+[[ports]]
+localPort = 40947
+externalPort = 3003
+
+[[ports]]
+localPort = 49191
+
+[[ports]]
+localPort = 53957
+externalPort = 4200
+
+[[ports]]
+localPort = 55071
+
+[[ports]]
+localPort = 55207
+externalPort = 3001
+
+[nix]

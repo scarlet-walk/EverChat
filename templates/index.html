@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>بوت الدردشة</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #chat-container {
+            width: 400px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .user {
+            background: #d1e7dd;
+            align-self: flex-start;
+        }
+        .bot {
+            background: #e2e3e5;
+            align-self: flex-end;
+        }
+        #input-area {
+            display: flex;
+            border-top: 1px solid #ccc;
+        }
+        #input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
+        #send {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="input" placeholder="اكتب رسالتك...">
+            <button id="send">إرسال</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById("messages");
+        const input = document.getElementById("input");
+        const sendBtn = document.getElementById("send");
+
+        function addMessage(text, sender) {
+            const msg = document.createElement("div");
+            msg.classList.add("message", sender);
+            msg.textContent = text;
+            messagesDiv.appendChild(msg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        sendBtn.addEventListener("click", () => {
+            const text = input.value.trim();
+            if (!text) return;
+            addMessage(text, "user");
+            input.value = "";
+
+            fetch("/get", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ msg: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                addMessage(data.reply, "bot");
+            })
+            .catch(err => {
+                addMessage("حدث خطأ في الاتصال بالخادم", "bot");
+            });
+        });
+
+        input.addEventListener("keypress", e => {
+            if (e.key === "Enter") sendBtn.click();
+        });
+    </script>
+</body>
+</html>
