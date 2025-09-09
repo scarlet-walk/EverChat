@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}الإعدادات - EverChat{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>الإعدادات
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Profile Settings -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">
+                            <i class="fas fa-user me-2"></i>الملف الشخصي
+                        </h5>
+                        <form method="POST" action="{{ url_for('update_profile') }}" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">اسم المستخدم</label>
+                                        <input type="text" class="form-control" name="username" value="{{ current_user.username }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">البريد الإلكتروني</label>
+                                        <input type="email" class="form-control" name="email" value="{{ current_user.email }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">نبذة شخصية</label>
+                                <textarea class="form-control" name="bio" rows="3" placeholder="اكتب نبذة عن نفسك...">{{ current_user.bio or '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">صورة الملف الشخصي</label>
+                                <input type="file" class="form-control" name="profile_pic" accept="image/*">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>حفظ التغييرات
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Maps Settings -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">
+                            <i class="fas fa-map me-2"></i>إعدادات الخرائط
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoDownloadMaps" checked>
+                                    <label class="form-check-label" for="autoDownloadMaps">
+                                        تحميل الخرائط تلقائياً للمناطق الجديدة
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="shareLocationDefault">
+                                    <label class="form-check-label" for="shareLocationDefault">
+                                        مشاركة الموقع افتراضياً
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">حد استخدام بيانات الخرائط</label>
+                                    <select class="form-select">
+                                        <option value="unlimited">بلا حدود</option>
+                                        <option value="1gb" selected>1 جيجابايت</option>
+                                        <option value="500mb">500 ميجابايت</option>
+                                        <option value="100mb">100 ميجابايت</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <h6>الخرائط المحملة</h6>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>المنطقة الحالية</strong>
+                                        <small class="d-block text-muted">تم التحديث: اليوم</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success">25 MB</span>
+                                        <button class="btn btn-sm btn-outline-danger ms-2">حذف</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GPT Assistant Settings -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">
+                            <i class="fas fa-robot me-2"></i>إعدادات المساعد الذكي
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">الوضع الافتراضي للمساعد</label>
+                                    <select class="form-select" id="defaultAssistantMode">
+                                        <option value="general" selected>مساعد عام</option>
+                                        <option value="travel">مساعد سفر</option>
+                                        <option value="emergency">مساعد طوارئ</option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableOfflineGPT" checked>
+                                    <label class="form-check-label" for="enableOfflineGPT">
+                                        تفعيل المساعد في الوضع بلا إنترنت
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoGPTResponse" checked>
+                                    <label class="form-check-label" for="autoGPTResponse">
+                                        استجابة تلقائية للأوامر @GPT
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="saveGPTHistory" checked>
+                                    <label class="form-check-label" for="saveGPTHistory">
+                                        حفظ تاريخ محادثات المساعد
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Settings -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">
+                            <i class="fas fa-first-aid me-2"></i>إعدادات الطوارئ
+                        </h5>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded mb-3">
+                            <h6 class="text-danger">أرقام الطوارئ</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">الطوارئ العامة</label>
+                                    <input type="tel" class="form-control" value="999" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">الشرطة</label>
+                                    <input type="tel" class="form-control" value="999" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">الإسعاف</label>
+                                    <input type="tel" class="form-control" value="997" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">الدفاع المدني</label>
+                                    <input type="tel" class="form-control" value="998" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableSOS" checked>
+                                    <label class="form-check-label" for="enableSOS">
+                                        تفعيل زر SOS السريع
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="autoShareLocationSOS" checked>
+                                    <label class="form-check-label" for="autoShareLocationSOS">
+                                        مشاركة الموقع تلقائياً عند SOS
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">نطاق إرسال SOS (متر)</label>
+                                    <select class="form-select">
+                                        <option value="100">100 متر</option>
+                                        <option value="500" selected>500 متر</option>
+                                        <option value="1000">1 كيلومتر</option>
+                                        <option value="5000">5 كيلومتر</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Privacy Settings -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">
+                            <i class="fas fa-shield-alt me-2"></i>الخصوصية والأمان
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="privateProfile">
+                                    <label class="form-check-label" for="privateProfile">
+                                        ملف شخصي خاص
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="hideLocation" checked>
+                                    <label class="form-check-label" for="hideLocation">
+                                        إخفاء الموقع عن الآخرين
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="allowOfflineChat" checked>
+                                    <label class="form-check-label" for="allowOfflineChat">
+                                        السماح بالمحادثات بلا إنترنت
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="encryptMessages" checked>
+                                    <label class="form-check-label" for="encryptMessages">
+                                        تشفير الرسائل
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Actions -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">
+                            <i class="fas fa-user-cog me-2"></i>إدارة الحساب
+                        </h5>
+                        <div class="d-grid gap-2 d-md-flex">
+                            <button class="btn btn-outline-primary" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>تصدير البيانات
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="clearCache()">
+                                <i class="fas fa-trash me-2"></i>مسح ذاكرة التخزين المؤقت
+                            </button>
+                            <button class="btn btn-outline-secondary" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportData() {
+    showNotification('بدء تصدير البيانات...', 'info');
+    // Simulate export
+    setTimeout(() => {
+        showNotification('تم تصدير البيانات بنجاح', 'success');
+    }, 2000);
+}
+
+function clearCache() {
+    if (confirm('هل أنت متأكد من رغبتك في مسح ذاكرة التخزين المؤقت؟')) {
+        showNotification('تم مسح ذاكرة التخزين المؤقت', 'success');
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type];
+
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Save settings automatically
+document.querySelectorAll('input[type="checkbox"], select').forEach(element => {
+    element.addEventListener('change', function() {
+        showNotification('تم حفظ الإعدادات', 'success');
+    });
+});
+</script>
+{% endblock %}

@@ -78,6 +78,69 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     is_read = db.Column(db.Boolean, default=False)
+    is_gpt_response = db.Column(db.Boolean, default=False)
     
     def __repr__(self):
         return f'<Message {self.id}>'
+
+class AssistantConversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    mode = db.Column(db.String(50), default='general')  # general, travel, emergency
+    user_message = db.Column(db.Text, nullable=False)
+    ai_response = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='assistant_conversations')
+    
+    def __repr__(self):
+        return f'<AssistantConversation {self.id}>'
+
+class OfflineMap(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    region_name = db.Column(db.String(200), nullable=False)
+    center_lat = db.Column(db.Float, nullable=False)
+    center_lng = db.Column(db.Float, nullable=False)
+    zoom_level = db.Column(db.Integer, default=10)
+    file_size = db.Column(db.Integer)  # Size in bytes
+    download_date = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='offline_maps')
+    
+    def __repr__(self):
+        return f'<OfflineMap {self.region_name}>'
+
+class EmergencyContact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    relationship = db.Column(db.String(50))  # family, friend, doctor, etc.
+    is_primary = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='emergency_contacts')
+    
+    def __repr__(self):
+        return f'<EmergencyContact {self.name}>'
+
+class SOSAlert(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    message = db.Column(db.Text)
+    status = db.Column(db.String(20), default='active')  # active, resolved, false_alarm
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+    
+    # Relationship
+    user = db.relationship('User', backref='sos_alerts')
+    
+    def __repr__(self):
+        return f'<SOSAlert {self.id}>'
