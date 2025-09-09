@@ -181,3 +181,18 @@ def get_messages(user_id):
         'created_at': msg.created_at.isoformat(),
         'is_own': msg.sender_id == current_user.id
     } for msg in messages])
+
+@app.route('/map')
+@login_required
+def map_view():
+    return render_template('map.html')
+
+@app.route('/assistant')
+@login_required
+def assistant():
+    return render_template('assistant.html')
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')

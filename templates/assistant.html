@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+
+{% block title %}مساعد GPT - EverChat{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Assistant Modes Sidebar -->
+        <div class="col-lg-3 col-md-4 d-none d-md-block">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>أوضاع المساعد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Connection Status -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>الحالة</span>
+                            <span class="badge bg-success" id="assistant-status">متصل</span>
+                        </div>
+                        <small class="text-muted">مساعد ذكي أونلاين وأوفلاين</small>
+                    </div>
+
+                    <!-- Assistant Modes -->
+                    <div class="mb-4">
+                        <h6>اختر وضع المساعد</h6>
+                        <div class="list-group">
+                            <button class="list-group-item list-group-item-action mode-btn active" data-mode="general" onclick="switchMode('general')">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-comments text-primary me-2"></i>
+                                        <strong>مساعد عام</strong>
+                                        <small class="d-block text-muted">للأسئلة العامة والمحادثة</small>
+                                    </div>
+                                </div>
+                            </button>
+                            <button class="list-group-item list-group-item-action mode-btn" data-mode="travel" onclick="switchMode('travel')">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-plane text-info me-2"></i>
+                                        <strong>مساعد سفر</strong>
+                                        <small class="d-block text-muted">للسفر والسياحة والطرق</small>
+                                    </div>
+                                </div>
+                            </button>
+                            <button class="list-group-item list-group-item-action mode-btn" data-mode="emergency" onclick="switchMode('emergency')">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-first-aid text-danger me-2"></i>
+                                        <strong>مساعد طوارئ</strong>
+                                        <small class="d-block text-muted">للمساعدة في المواقف الطارئة</small>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mb-4">
+                        <h6>إجراءات سريعة</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="clearChat()">
+                                <i class="fas fa-trash me-2"></i>مسح المحادثة
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="exportChat()">
+                                <i class="fas fa-download me-2"></i>تصدير المحادثة
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="toggleOfflineMode()">
+                                <i class="fas fa-wifi me-2"></i>وضع بلا إنترنت
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Directory -->
+                    <div class="mb-4">
+                        <h6>دليل الطوارئ</h6>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item">
+                                <small class="text-muted">الطوارئ العامة</small>
+                                <div class="fw-bold">999</div>
+                            </div>
+                            <div class="list-group-item">
+                                <small class="text-muted">الشرطة</small>
+                                <div class="fw-bold">999</div>
+                            </div>
+                            <div class="list-group-item">
+                                <small class="text-muted">الإسعاف</small>
+                                <div class="fw-bold">997</div>
+                            </div>
+                            <div class="list-group-item">
+                                <small class="text-muted">الدفاع المدني</small>
+                                <div class="fw-bold">998</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="col-lg-9 col-md-8 col-12">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-0" id="mode-title">
+                                <i class="fas fa-comments text-primary me-2"></i>مساعد عام
+                            </h5>
+                            <small class="text-muted" id="mode-description">أسأل أي سؤال وسأساعدك</small>
+                        </div>
+                        <div class="d-md-none">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="toggleMobileSidebar()">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body d-flex flex-column" style="height: 70vh;">
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="flex-grow-1 overflow-auto mb-3" style="max-height: calc(70vh - 120px);">
+                        <div class="text-center p-4" id="welcome-message">
+                            <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                            <h4>مرحباً! أنا مساعدك الذكي</h4>
+                            <p class="text-muted">يمكنني مساعدتك في:</p>
+                            <div class="row text-center mt-3">
+                                <div class="col-md-4">
+                                    <i class="fas fa-question-circle fa-2x text-info mb-2"></i>
+                                    <div>الإجابة على الأسئلة</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="fas fa-route fa-2x text-success mb-2"></i>
+                                    <div>التخطيط للرحلات</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <i class="fas fa-first-aid fa-2x text-danger mb-2"></i>
+                                    <div>المساعدة في الطوارئ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Input -->
+                    <div class="border-top pt-3">
+                        <form id="chat-form" class="d-flex align-items-center">
+                            <div class="input-group">
+                                <input type="text" id="message-input" class="form-control" placeholder="اكتب رسالتك هنا..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                        <small class="text-muted d-block mt-1">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            نصيحة: استخدم @GPT في المحادثات لاستدعاء المساعد
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Mode Selector (Bottom Sheet) -->
+<div class="d-md-none">
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="mobileSidebar">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">أوضاع المساعد</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="list-group">
+                <button class="list-group-item list-group-item-action mobile-mode-btn active" data-mode="general" onclick="switchMode('general')">
+                    <i class="fas fa-comments text-primary me-2"></i>مساعد عام
+                </button>
+                <button class="list-group-item list-group-item-action mobile-mode-btn" data-mode="travel" onclick="switchMode('travel')">
+                    <i class="fas fa-plane text-info me-2"></i>مساعد سفر
+                </button>
+                <button class="list-group-item list-group-item-action mobile-mode-btn" data-mode="emergency" onclick="switchMode('emergency')">
+                    <i class="fas fa-first-aid text-danger me-2"></i>مساعد طوارئ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentMode = 'general';
+let isOffline = false;
+
+const modes = {
+    general: {
+        title: 'مساعد عام',
+        description: 'أسأل أي سؤال وسأساعدك',
+        icon: 'fas fa-comments text-primary',
+        prompt: 'أنت مساعد ذكي عام يساعد في الأسئلة والمحادثات العامة.'
+    },
+    travel: {
+        title: 'مساعد سفر',
+        description: 'مساعدتك في التخطيط للسفر والطرق',
+        icon: 'fas fa-plane text-info',
+        prompt: 'أنت مساعد سفر متخصص في التخطيط للرحلات والسياحة والطرق.'
+    },
+    emergency: {
+        title: 'مساعد طوارئ',
+        description: 'مساعدة فورية في المواقف الطارئة',
+        icon: 'fas fa-first-aid text-danger',
+        prompt: 'أنت مساعد طوارئ متخصص في تقديم المساعدة الفورية والإرشادات في المواقف الطارئة.'
+    }
+};
+
+function switchMode(mode) {
+    currentMode = mode;
+    const modeInfo = modes[mode];
+    
+    // Update UI
+    document.getElementById('mode-title').innerHTML = `<i class="${modeInfo.icon} me-2"></i>${modeInfo.title}`;
+    document.getElementById('mode-description').textContent = modeInfo.description;
+    
+    // Update active buttons
+    document.querySelectorAll('.mode-btn, .mobile-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.mode === mode) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Add mode change message
+    addSystemMessage(`تم تغيير المساعد إلى: ${modeInfo.title}`);
+}
+
+function addSystemMessage(message) {
+    const chatMessages = document.getElementById('chat-messages');
+    const welcomeMessage = document.getElementById('welcome-message');
+    
+    if (welcomeMessage) {
+        welcomeMessage.remove();
+    }
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'text-center my-3';
+    messageDiv.innerHTML = `
+        <small class="badge bg-secondary">${message}</small>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addMessage(content, isUser = false) {
+    const chatMessages = document.getElementById('chat-messages');
+    const welcomeMessage = document.getElementById('welcome-message');
+    
+    if (welcomeMessage) {
+        welcomeMessage.remove();
+    }
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `mb-3 ${isUser ? 'text-end' : 'text-start'}`;
+    
+    if (isUser) {
+        messageDiv.innerHTML = `
+            <div class="d-inline-block bg-primary text-white p-3 rounded-3 shadow-sm" style="max-width: 70%;">
+                ${content}
+            </div>
+        `;
+    } else {
+        messageDiv.innerHTML = `
+            <div class="d-inline-block bg-light border p-3 rounded-3 shadow-sm" style="max-width: 70%;">
+                <i class="fas fa-robot text-primary me-2"></i>${content}
+            </div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function sendMessage() {
+    const input = document.getElementById('message-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    addMessage(message, true);
+    input.value = '';
+    
+    // Show typing indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'mb-3 text-start';
+    typingDiv.innerHTML = `
+        <div class="d-inline-block bg-light border p-3 rounded-3">
+            <i class="fas fa-robot text-primary me-2"></i>
+            <span class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+        </div>
+    `;
+    document.getElementById('chat-messages').appendChild(typingDiv);
+    document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+    
+    // Simulate AI response
+    setTimeout(() => {
+        document.getElementById('typing-indicator').remove();
+        
+        const responses = getResponsesForMode(currentMode, message);
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        
+        addMessage(response);
+    }, 1500);
+}
+
+function getResponsesForMode(mode, userMessage) {
+    const generalResponses = [
+        'شكراً لسؤالك! يمكنني مساعدتك في هذا الموضوع. هل تحتاج لمزيد من التفاصيل؟',
+        'هذا سؤال ممتاز! بناءً على ما ذكرت، أنصحك بالتالي...',
+        'فهمت ما تقصده. دعني أقدم لك بعض المعلومات المفيدة...',
+        'يمكنني مساعدتك في هذا الأمر. هل هناك جانب معين تريد التركيز عليه؟'
+    ];
+    
+    const travelResponses = [
+        'بالنسبة للسفر، أنصحك بالتخطيط المسبق والتحقق من الطقس ومتطلبات السفر.',
+        'هذه وجهة رائعة! دعني أقدم لك بعض النصائح للاستمتاع برحلتك.',
+        'للحصول على أفضل الأسعار، أنصحك بالحجز المبكر ومقارنة العروض.',
+        'سأساعدك في التخطيط لرحلتك. هل تحتاج معلومات عن الإقامة أم المواصلات؟'
+    ];
+    
+    const emergencyResponses = [
+        'في حالات الطوارئ، الأولوية للسلامة أولاً. هل أنت بأمان الآن؟',
+        'إذا كانت حالة طوارئ حقيقية، اتصل بالرقم 999 فوراً.',
+        'أفهم أن الوضع مقلق. دعني أرشدك للخطوات الصحيحة...',
+        'السلامة أولاً. إذا كنت في خطر، اطلب المساعدة الفورية من الخدمات المختصة.'
+    ];
+    
+    switch(mode) {
+        case 'travel': return travelResponses;
+        case 'emergency': return emergencyResponses;
+        default: return generalResponses;
+    }
+}
+
+function clearChat() {
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = `
+        <div class="text-center p-4" id="welcome-message">
+            <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+            <h4>تم مسح المحادثة</h4>
+            <p class="text-muted">يمكنك بدء محادثة جديدة الآن</p>
+        </div>
+    `;
+}
+
+function exportChat() {
+    showNotification('تم تصدير المحادثة بنجاح', 'success');
+}
+
+function toggleOfflineMode() {
+    isOffline = !isOffline;
+    const statusBadge = document.getElementById('assistant-status');
+    
+    if (isOffline) {
+        statusBadge.textContent = 'وضع بلا إنترنت';
+        statusBadge.className = 'badge bg-warning';
+        addSystemMessage('تم التبديل للوضع بلا إنترنت - مساعد محلي نشط');
+    } else {
+        statusBadge.textContent = 'متصل';
+        statusBadge.className = 'badge bg-success';
+        addSystemMessage('تم التبديل للوضع المتصل - مساعد كامل نشط');
+    }
+}
+
+function toggleMobileSidebar() {
+    const offcanvas = new bootstrap.Offcanvas(document.getElementById('mobileSidebar'));
+    offcanvas.show();
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type];
+
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Add typing animation CSS
+const style = document.createElement('style');
+style.textContent = `
+    .typing-dots {
+        display: inline-block;
+    }
+    .typing-dots span {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: #999;
+        margin: 0 1px;
+        animation: typing 1.4s infinite;
+    }
+    .typing-dots span:nth-child(1) { animation-delay: 0s; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.5;
+        }
+        30% {
+            transform: translateY(-10px);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Event listeners
+document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    sendMessage();
+});
+
+document.getElementById('message-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Set active nav and initialize
+document.addEventListener('DOMContentLoaded', function() {
+    const assistantNavLink = document.querySelector('[data-section="assistant"]');
+    if (assistantNavLink) {
+        assistantNavLink.classList.add('active');
+    }
+});
+</script>
+{% endblock %}

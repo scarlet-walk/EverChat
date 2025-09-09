@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}خرائط - EverChat{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Map Controls Sidebar -->
+        <div class="col-lg-3 col-md-4 d-none d-md-block">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map me-2"></i>خرائط
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Online/Offline Status -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>الحالة</span>
+                            <span class="badge bg-success" id="connection-status">متصل</span>
+                        </div>
+                    </div>
+
+                    <!-- Map Controls -->
+                    <div class="mb-4">
+                        <h6>إعدادات الخريطة</h6>
+                        <div class="btn-group-vertical w-100 mb-3">
+                            <button class="btn btn-outline-primary btn-sm" onclick="getCurrentLocation()">
+                                <i class="fas fa-crosshairs me-2"></i>موقعي الحالي
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="downloadOfflineMap()">
+                                <i class="fas fa-download me-2"></i>تحميل للاستخدام بلا إنترنت
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="manageOfflineMaps()">
+                                <i class="fas fa-folder me-2"></i>إدارة الخرائط المحملة
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Share Location -->
+                    <div class="mb-4">
+                        <h6>مشاركة الموقع</h6>
+                        <button class="btn btn-primary w-100" onclick="shareLocation()">
+                            <i class="fas fa-share me-2"></i>مشاركة موقعي
+                        </button>
+                    </div>
+
+                    <!-- GPT Assistant -->
+                    <div class="mb-4">
+                        <h6>مساعد الخرائط</h6>
+                        <button class="btn btn-warning w-100" onclick="askMapGPT()">
+                            <i class="fas fa-robot me-2"></i>اسأل عن الطرق والأماكن
+                        </button>
+                    </div>
+
+                    <!-- Emergency Features -->
+                    <div class="mb-4">
+                        <h6>طوارئ</h6>
+                        <button class="btn btn-danger w-100" onclick="sendSOS()">
+                            <i class="fas fa-exclamation-triangle me-2"></i>SOS
+                        </button>
+                    </div>
+
+                    <!-- Nearby Places -->
+                    <div class="mb-4">
+                        <h6>أماكن قريبة</h6>
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action" onclick="findNearby('hospital')">
+                                <i class="fas fa-hospital text-danger me-2"></i>مستشفيات
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="findNearby('pharmacy')">
+                                <i class="fas fa-pills text-success me-2"></i>صيدليات
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="findNearby('police')">
+                                <i class="fas fa-shield-alt text-primary me-2"></i>شرطة
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="findNearby('gas_station')">
+                                <i class="fas fa-gas-pump text-warning me-2"></i>محطات وقود
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Display -->
+        <div class="col-lg-9 col-md-8 col-12">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body p-0">
+                    <!-- Map Container -->
+                    <div id="map-container" style="height: 70vh; min-height: 500px; background-color: #f8f9fa;">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center">
+                                <i class="fas fa-map fa-4x text-muted mb-3"></i>
+                                <h4 class="text-muted">خريطة تفاعلية</h4>
+                                <p class="text-muted">سيتم تحميل الخريطة هنا</p>
+                                <button class="btn btn-primary" onclick="initializeMap()">
+                                    <i class="fas fa-play me-2"></i>تشغيل الخريطة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Controls (Bottom Sheet) -->
+<div class="d-md-none">
+    <div class="fixed-bottom bg-white border-top" style="bottom: 60px; z-index: 1020;">
+        <div class="container-fluid p-3">
+            <div class="row">
+                <div class="col-4">
+                    <button class="btn btn-primary btn-sm w-100" onclick="getCurrentLocation()">
+                        <i class="fas fa-crosshairs"></i>
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-warning btn-sm w-100" onclick="askMapGPT()">
+                        <i class="fas fa-robot"></i>
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-danger btn-sm w-100" onclick="sendSOS()">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GPT Map Assistant Modal -->
+<div class="modal fade" id="mapGPTModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-robot me-2"></i>مساعد الخرائط
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="gpt-chat-container" style="height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin-bottom: 15px;">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-robot fa-2x mb-2"></i>
+                        <p>مرحباً! يمكنني مساعدتك في:</p>
+                        <ul class="list-unstyled">
+                            <li>🗺️ إيجاد الطرق والاتجاهات</li>
+                            <li>📍 البحث عن أماكن معينة</li>
+                            <li>🚗 معلومات المرور</li>
+                            <li>🏥 أماكن الطوارئ القريبة</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="gpt-input" placeholder="اسأل عن الطرق والأماكن...">
+                    <button class="btn btn-primary" onclick="sendMapGPTMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SOS Modal -->
+<div class="modal fade" id="sosModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>طوارئ - SOS
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <p class="lead">هل تحتاج مساعدة عاجلة؟</p>
+                    <p>سيتم إرسال موقعك الحالي للأجهزة القريبة</p>
+                </div>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-danger" onclick="confirmSOS()">
+                        <i class="fas fa-exclamation-triangle me-2"></i>نعم، أرسل SOS
+                    </button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Map functionality
+let map = null;
+let userLocation = null;
+
+function initializeMap() {
+    // This would normally initialize a real map (like Leaflet or Google Maps)
+    const mapContainer = document.getElementById('map-container');
+    mapContainer.innerHTML = `
+        <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+            <div class="text-center">
+                <i class="fas fa-map-marked-alt fa-4x text-primary mb-3"></i>
+                <h4>خريطة تفاعلية نشطة</h4>
+                <p class="text-muted">الخريطة جاهزة للاستخدام</p>
+                <div class="mt-3">
+                    <span class="badge bg-success">متصل</span>
+                    <span class="badge bg-info">GPS نشط</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            showNotification('تم تحديد موقعك بنجاح', 'success');
+        }, function(error) {
+            showNotification('فشل في تحديد الموقع', 'error');
+        });
+    } else {
+        showNotification('المتصفح لا يدعم تحديد الموقع', 'error');
+    }
+}
+
+function shareLocation() {
+    if (userLocation) {
+        const locationUrl = `https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
+        navigator.clipboard.writeText(locationUrl).then(() => {
+            showNotification('تم نسخ رابط الموقع', 'success');
+        });
+    } else {
+        showNotification('يجب تحديد موقعك أولاً', 'warning');
+    }
+}
+
+function downloadOfflineMap() {
+    showNotification('بدء تحميل خريطة المنطقة للاستخدام بلا إنترنت...', 'info');
+    // Simulate download
+    setTimeout(() => {
+        showNotification('تم تحميل الخريطة بنجاح', 'success');
+    }, 3000);
+}
+
+function manageOfflineMaps() {
+    showNotification('فتح إدارة الخرائط المحملة...', 'info');
+}
+
+function findNearby(type) {
+    const typeNames = {
+        'hospital': 'المستشفيات',
+        'pharmacy': 'الصيدليات',
+        'police': 'مراكز الشرطة',
+        'gas_station': 'محطات الوقود'
+    };
+    showNotification(`البحث عن ${typeNames[type]} القريبة...`, 'info');
+}
+
+function askMapGPT() {
+    const modal = new bootstrap.Modal(document.getElementById('mapGPTModal'));
+    modal.show();
+}
+
+function sendMapGPTMessage() {
+    const input = document.getElementById('gpt-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatContainer = document.getElementById('gpt-chat-container');
+    
+    // Add user message
+    chatContainer.innerHTML += `
+        <div class="mb-2 text-end">
+            <div class="d-inline-block bg-primary text-white p-2 rounded">${message}</div>
+        </div>
+    `;
+
+    input.value = '';
+
+    // Simulate GPT response
+    setTimeout(() => {
+        const responses = [
+            'يمكنني مساعدتك في إيجاد الطريق إلى وجهتك. ما هو المكان الذي تريد الذهاب إليه؟',
+            'أقرب مستشفى يبعد حوالي 2 كيلومتر شمال موقعك الحالي.',
+            'حالة المرور جيدة على الطريق الرئيسي. الوقت المتوقع للوصول 15 دقيقة.',
+            'يوجد 3 محطات وقود في دائرة نصف قطرها كيلومتر واحد من موقعك.'
+        ];
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        
+        chatContainer.innerHTML += `
+            <div class="mb-2">
+                <div class="d-inline-block bg-light border p-2 rounded">
+                    <i class="fas fa-robot text-primary me-1"></i>${response}
+                </div>
+            </div>
+        `;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }, 1000);
+}
+
+function sendSOS() {
+    const modal = new bootstrap.Modal(document.getElementById('sosModal'));
+    modal.show();
+}
+
+function confirmSOS() {
+    // Close modal first
+    bootstrap.Modal.getInstance(document.getElementById('sosModal')).hide();
+    
+    showNotification('تم إرسال إشارة SOS للأجهزة القريبة', 'warning');
+    
+    // Simulate emergency broadcast
+    setTimeout(() => {
+        showNotification('تم التواصل مع 3 أجهزة قريبة', 'info');
+    }, 2000);
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type];
+
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// Check online/offline status
+function updateConnectionStatus() {
+    const statusBadge = document.getElementById('connection-status');
+    if (navigator.onLine) {
+        statusBadge.textContent = 'متصل';
+        statusBadge.className = 'badge bg-success';
+    } else {
+        statusBadge.textContent = 'غير متصل';
+        statusBadge.className = 'badge bg-danger';
+    }
+}
+
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
+// Set active nav
+document.addEventListener('DOMContentLoaded', function() {
+    const mapNavLink = document.querySelector('[data-section="map"]');
+    if (mapNavLink) {
+        mapNavLink.classList.add('active');
+    }
+    updateConnectionStatus();
+});
+</script>
+{% endblock %}
