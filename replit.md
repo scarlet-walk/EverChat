@@ -69,3 +69,6 @@ Preferred communication style: Simple, everyday language.
 - **SESSION_SECRET**: Security key for session management
 - **DATABASE_URL**: Database connection string (defaults to SQLite)
 - **Upload Configuration**: File size limits and allowed extensions
+- # تحديث بسيط لرفع المشروع
+- # تعديل بسيط لرفع المشروع
+
