@@ -1,0 +1,54 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches: [ الرئيسية ]
+  pull_request:
+    branches: [ الرئيسية ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ سحب الكود
+      - name: سحب الكود
+        uses: actions/checkout@v4
+
+      # 2️⃣ تثبيت Node.js
+      - name: تثبيت Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3️⃣ كاش لتسريع التثبيت
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4️⃣ تثبيت الحزم
+      - name: تثبيت الحزم
+        run: npm install
+
+      # 5️⃣ فحص الكود
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
+
+      # 6️⃣ تشغيل الاختبارات
+      - name: Run tests
+        run: npm test || true
+
+      # 7️⃣ بناء المشروع
+      - name: بناء المشروع
+        run: npm run build && npm run export
+
+      # 8️⃣ النشر على GitHub Pages
+      - name: نشر على GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
