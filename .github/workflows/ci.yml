@@ -18,10 +18,9 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
+    environment: github-pages   # تعريف واحد فقط
 
-    steps:
+    steps:                      # تعريف واحد فقط لكل الخطوات
       - name: سحب الكود
         uses: actions/checkout@v4
 
@@ -53,38 +52,4 @@ jobs:
       - name: النشر على GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-    environment:
-      name: github-pages
 
-    steps:
-      - name: سحب الكود
-        uses: actions/checkout@v4
-
-      - name: تثبيت Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: تثبيت الحزم
-        run: npm ci || npm install
-
-      - name: تشغيل ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
-
-      - name: تشغيل الاختبارات
-        run: npm test || true
-
-      - name: بناء وتصدير
-        run: |
-          npm run build
-          npm run export
-
-      - name: رفع ملفات الموقع
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out
-
-      - name: النشر على GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
