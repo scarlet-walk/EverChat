@@ -6,49 +6,61 @@ on:
   pull_request:
     branches: [ الرئيسية ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
 
     steps:
-      # 1️⃣ سحب الكود
+      # 1) سحب الكود
       - name: سحب الكود
         uses: actions/checkout@v4
 
-      # 2️⃣ تثبيت Node.js
+      # 2) تثبيت Node.js
       - name: تثبيت Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      # 3️⃣ كاش لتسريع التثبيت
-      - name: Cache Node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      # 4️⃣ تثبيت الحزم
+      # 3) تثبيت الحزم
       - name: تثبيت الحزم
-        run: npm install
+        run: |
+          npm ci || npm install
 
-      # 5️⃣ فحص الكود
-      - name: Run ESLint
+      # 4) فحص (اختياري)
+      - name: تشغيل ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
 
-      # 6️⃣ تشغيل الاختبارات
-      - name: Run tests
+      # 5) اختبارات (اختياري)
+      - name: تشغيل الاختبارات
         run: npm test || true
 
-      # 7️⃣ بناء المشروع
-      - name: بناء المشروع
-        run: npm run build && npm run export
+      # 6) بناء المشروع والتصدير الستاتيكي
+      - name: بناء وتصدير
+        run: |
+          npm run build
+          npm run export
 
-      # 8️⃣ النشر على GitHub Pages
-      - name: نشر على GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      # 7) رفع ملفات التصدير كأرتيفاكت لصفحات GitHub
+      - name: رفع ملفات الموقع
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
+          path: ./out
+
+      # 8) النشر إلى GitHub Pages
+      - name: النشر على GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+          
