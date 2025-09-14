@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: github-pages   # تعريف واحد فقط
 
-    steps:                      # تعريف واحد فقط لكل الخطوات
+    steps:
       - name: سحب الكود
         uses: actions/checkout@v4
 
@@ -52,4 +52,3 @@ jobs:
       - name: النشر على GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
