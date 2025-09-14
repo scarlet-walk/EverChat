@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: github-pages   # تعريف واحد فقط
+    environment: github-pages   # تعريف بيئة النشر
 
     steps:
       - name: سحب الكود
