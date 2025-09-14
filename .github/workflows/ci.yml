@@ -2,9 +2,9 @@ name: CI & Deploy
 
 on:
   push:
-    branches: [ الرئيسية ]
+    branches: [ main ]
   pull_request:
-    branches: [ الرئيسية ]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -22,45 +22,69 @@ jobs:
       name: github-pages
 
     steps:
-      # 1) سحب الكود
       - name: سحب الكود
         uses: actions/checkout@v4
 
-      # 2) تثبيت Node.js
       - name: تثبيت Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # 3) تثبيت الحزم
       - name: تثبيت الحزم
-        run: |
-          npm ci || npm install
+        run: npm ci || npm install
 
-      # 4) فحص (اختياري)
       - name: تشغيل ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
 
-      # 5) اختبارات (اختياري)
       - name: تشغيل الاختبارات
         run: npm test || true
 
-      # 6) بناء المشروع والتصدير الستاتيكي
       - name: بناء وتصدير
         run: |
           npm run build
           npm run export
 
-      # 7) رفع ملفات التصدير كأرتيفاكت لصفحات GitHub
       - name: رفع ملفات الموقع
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
 
-      # 8) النشر إلى GitHub Pages
       - name: النشر على GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+    environment:
+      name: github-pages
 
-          
+    steps:
+      - name: سحب الكود
+        uses: actions/checkout@v4
+
+      - name: تثبيت Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: تثبيت الحزم
+        run: npm ci || npm install
+
+      - name: تشغيل ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
+
+      - name: تشغيل الاختبارات
+        run: npm test || true
+
+      - name: بناء وتصدير
+        run: |
+          npm run build
+          npm run export
+
+      - name: رفع ملفات الموقع
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+      - name: النشر على GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
