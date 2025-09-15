@@ -19,7 +19,7 @@ jobs:
       - name: سحب الكود
         uses: actions/checkout@v4
 
-      - name: تثبيت Node.js
+      - name: إعداد Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
