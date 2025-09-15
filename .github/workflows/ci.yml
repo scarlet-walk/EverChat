@@ -24,7 +24,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - name: تثبيت الحزم
-        run: npm ci || npm install
+        run: npm install
       - name: تشغيل ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
       - name: تشغيل الاختبارات
